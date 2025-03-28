@@ -293,17 +293,45 @@
     
 -- LIMIT 300;
 
+-- m-1
 
-with spends_prod_id_wise_yoy as(
-select DISTINCT(EXTRACT(YEAR from transaction_date)) as yr,sum(spend) as total_spends,product_id
-from classicmodels.y_on_y_growth_rate
-group by product_id,EXTRACT(YEAR from transaction_date)
-),
-prod_wise_spend_yoy as(
-select product_id,yr,total_spends,
-row_number() over(partition by product_id order by yr,total_spends) as r,
-lag(total_spends,1,0) over(partition by product_id order by yr,total_spends) as spend_l_yr
-from spends_prod_id_wise_yoy)
-select product_id,yr,total_spends,
-round((total_spends-spend_l_yr)/NULLIF(spend_l_yr,0),2) as incYOY
-from prod_wise_spend_yoy;
+-- with spends_prod_id_wise_yoy as(
+-- select DISTINCT(EXTRACT(YEAR from transaction_date)) as yr,sum(spend) as total_spends,product_id
+-- from classicmodels.y_on_y_growth_rate
+-- group by product_id,EXTRACT(YEAR from transaction_date)
+-- ),
+-- prod_wise_spend_yoy as(
+-- select yr,product_id,total_spends,
+-- row_number() over(partition by product_id order by yr,total_spends) as r,
+-- lag(total_spends,1,NULL) over(partition by product_id order by yr,total_spends) as spend_l_yr
+-- from spends_prod_id_wise_yoy)
+-- select yr as year,product_id,total_spends as curr_year_spend,spend_l_yr as yoy_rate, 
+-- round((total_spends-spend_l_yr)*100/NULLIF(spend_l_yr,0),2) as incYOY
+-- from prod_wise_spend_yoy;
+
+-- m-2
+-- WITH yearly_spend AS (
+--     SELECT 
+--         YEAR(transaction_date) AS year,
+--         product_id,
+--         SUM(spend) AS current_year_spend
+--     FROM classicmodels.y_on_y_growth_rate
+--     GROUP BY year, product_id
+-- ),
+-- previous_year_spend AS (
+--     SELECT 
+--         year + 1 AS year,  -- Shifting year to join with next year
+--         product_id,
+--         current_year_spend AS previous_year_spend
+--     FROM yearly_spend
+-- )
+-- SELECT 
+--     y.year,
+--     y.product_id,
+--     y.current_year_spend,
+--     p.previous_year_spend,
+--     ROUND(((y.current_year_spend - p.previous_year_spend) / NULLIF(p.previous_year_spend, 0)) * 100, 2) AS YoY_growth_percentage
+-- FROM yearly_spend y
+-- LEFT JOIN previous_year_spend p
+-- ON y.year = p.year AND y.product_id = p.product_id
+-- ORDER BY y.year, y.product_id;
