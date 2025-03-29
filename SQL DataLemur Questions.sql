@@ -376,9 +376,34 @@
 -- square_footage	decimal
 
 
-item_id	item_type	item_category	square_footage
-1374	prime_eligible	mini refrigerator	68.00
-4245	not_prime	standing lamp	26.40
-2452	prime_eligible	television	85.00
-3255	not_prime	side table	22.60
-1672	prime_eligible	laptop	8.50
+-- item_id	item_type	item_category	square_footage
+-- 1374	prime_eligible	mini refrigerator	68.00
+-- 4245	not_prime	standing lamp	26.40
+-- 2452	prime_eligible	television	85.00
+-- 3255	not_prime	side table	22.60
+-- 1672	prime_eligible	laptop	8.50
+
+
+create table Amazon_Inventory_Storage(
+    item_id INTEGER Primary key,
+    item_type VARCHAR(20),
+    item_category  varchar(50),
+    square_footage DECIMAL(10,2)
+);
+
+INSERT INTO Amazon_Inventory_Storage (item_id, item_type, item_category, square_footage)
+SELECT 
+    ROW_NUMBER() OVER () AS item_id,
+    CASE WHEN ROW_NUMBER() OVER () % 2 = 0 THEN 'prime_eligible' ELSE 'not_prime' END AS item_type,
+    CASE 
+        WHEN ROW_NUMBER() OVER () % 5 = 0 THEN 'mini refrigerator'
+        WHEN ROW_NUMBER() OVER () % 5 = 1 THEN 'standing lamp'
+        WHEN ROW_NUMBER() OVER () % 5 = 2 THEN 'television'
+        WHEN ROW_NUMBER() OVER () % 5 = 3 THEN 'side table'
+        ELSE 'laptop'
+    END AS item_category,
+    ROUND(20 + (RAND() * 80), 2) AS square_footage
+FROM (SELECT 1 AS n UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5) AS a,
+     (SELECT 1 AS n UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5) AS b,
+     (SELECT 1 AS n UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5) AS c
+LIMIT 300;
